@@ -47,6 +47,45 @@ namespace Common
             }
         }
 
+        public Shader(string vertexPath, string fragmentPath, string geometryPath)
+        {
+            var shaderSource = File.ReadAllText(vertexPath);
+            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vertexShader, shaderSource);
+            CompileShader(vertexShader);
+
+            shaderSource = File.ReadAllText(geometryPath);
+            var geometryShader = GL.CreateShader(ShaderType.GeometryShader);
+            GL.ShaderSource(geometryShader, shaderSource);
+            CompileShader(geometryShader);
+
+            shaderSource = File.ReadAllText(fragmentPath);
+            var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(fragmentShader, shaderSource);
+            CompileShader(fragmentShader);
+
+            Handle = GL.CreateProgram();
+            GL.AttachShader(Handle, vertexShader);
+            GL.AttachShader(Handle, fragmentShader);
+            LinkProgram(Handle);
+            GL.DetachShader(Handle, vertexShader);
+            GL.DeleteShader(vertexShader);
+            GL.DetachShader(Handle, fragmentShader);
+            GL.DeleteShader(fragmentShader);
+
+            GL.GetProgram(Handle, ProgramParameter.ActiveUniforms, out var numberOfUniforms);
+
+            _uniformLocations = new Dictionary<string, int>();
+
+            for (int i = 0; i < numberOfUniforms; i++)
+            {
+                var key = GL.GetActiveUniform(Handle, i, out _, out _);
+                var location = GL.GetUniformLocation(Handle, key);
+
+                _uniformLocations.Add(key, location);
+            }
+        }
+
         private static void CompileShader(int shader)
         {
             GL.CompileShader(shader);
@@ -64,6 +103,7 @@ namespace Common
             GL.GetProgram(program, ProgramParameter.LinkStatus, out var code);
             if (code != (int)All.True)
             {
+                var infoLog = GL.GetProgramInfoLog(program);
                 throw new Exception($"Error occurred whilst linking Program({program})");
             }
         }

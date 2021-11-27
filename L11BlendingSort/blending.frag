@@ -24,4 +24,9 @@ void main()
 
     FragColor = texColor;
 
+//    if(gl_FragCoord.x < 400)
+//        FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+//    else
+//        FragColor = vec4(0.0, 1.0, 0.0, 1.0);   
+
 }
